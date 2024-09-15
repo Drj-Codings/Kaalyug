@@ -2,14 +2,15 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebas
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-analytics.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyCybmXAUWgGDCMNQWvcRdaMgE31I1GkF8M",
-  authDomain: "log-in-authentication-ac1b6.firebaseapp.com",
-  projectId: "log-in-authentication-ac1b6",
-  storageBucket: "log-in-authentication-ac1b6.appspot.com",
-  messagingSenderId: "735126972855",
-  appId: "1:735126972855:web:b26c16bd1de14bf361e032",
-  measurementId: "G-3GKSESXV7S"
+  apiKey: "AIzaSyAGgjxRmwVBgJ2NOp2akkOad5hVmYjPA8c",
+  authDomain: "frrdrj-a460a.firebaseapp.com",
+  projectId: "frrdrj-a460a",
+  storageBucket: "frrdrj-a460a.appspot.com",
+  messagingSenderId: "352280969666",
+  appId: "1:352280969666:web:af8289699716b8a6b8165b",
+  measurementId: "G-LE0D05SZV2"
 };
 
 const app = initializeApp(firebaseConfig);
