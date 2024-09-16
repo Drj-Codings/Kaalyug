@@ -1,8 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-analytics.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyAGgjxRmwVBgJ2NOp2akkOad5hVmYjPA8c",
   authDomain: "frrdrj-a460a.firebaseapp.com",
@@ -18,16 +17,97 @@ const analytics = getAnalytics(app);
 const auth = getAuth(app);
 
 const submitButton = document.getElementById("submit");
-const signupButton = document.getElementById("sign-up");
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
-const main = document.getElementById("main");
-const createacct = document.getElementById("create-acct")
 
-const signupEmailIn = document.getElementById("email-signup");
-const confirmSignupEmailIn = document.getElementById("confirm-email-signup");
-const signupPasswordIn = document.getElementById("password-signup");
-const confirmSignUpPasswordIn = document.getElementById("confirm-password-signup");
+const phoneInput = document.getElementById("phone-number");
+const sendOtpButton = document.getElementById("send-otp");
+const otpInput = document.getElementById("otp");
+const otpLabel = document.getElementById("otp-label");
+const verifyOtpButton = document.getElementById("verify-otp");
+
+let recaptchaVerifier;
+
+function setupRecaptcha() {
+  recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
+    'size': 'normal',
+    'callback': (response) => {
+      window.alert('Recaptcha verified.');
+    }
+  }, auth);
+  recaptchaVerifier.render();
+}
+
+setupRecaptcha();
+
+submitButton.addEventListener("click", () => {
+  const email = emailInput.value;
+  const password = passwordInput.value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      window.alert("Login successful! Welcome back!");
+    })
+    .catch((error) => {
+      window.alert(`Login failed: ${error.message}`);
+    });
+});
+
+sendOtpButton.addEventListener("click", () => {
+  const phoneNumber = phoneInput.value;
+
+  signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier)
+    .then((confirmationResult) => {
+      window.confirmationResult = confirmationResult;
+      otpLabel.style.display = "block";
+      otpInput.style.display = "block";
+      verifyOtpButton.style.display = "block";
+      window.alert("OTP sent!");
+    })
+    .catch((error) => {
+      window.alert(`Error sending OTP: ${error.message}`);
+    });
+});
+
+verifyOtpButton.addEventListener("click", () => {
+  const otp = otpInput.value;
+
+  window.confirmationResult.confirm(otp).then((result) => {
+    window.alert("Phone number verified successfully!");
+  }).catch((error) => {
+    window.alert(`Error verifying OTP: ${error.message}`);
+  });
+});
+
+const signupButton = document.getElementById("sign-up");
+const main = document.getElementById("main");
+const createAcct = document.getElementById("create-acct");
+
+signupButton.addEventListener("click", () => {
+  main.style.display = "none";
+  createAcct.style.display = "block";
+});
+
+const createAcctBtn = document.getElementById("create-acct-btn");
+createAcctBtn.addEventListener("click", () => {
+  const signupEmail = document.getElementById("email-signup").value;
+  const signupPassword = document.getElementById("password-signup").value;
+
+  createUserWithEmailAndPassword(auth, signupEmail, signupPassword)
+    .then((userCredential) => {
+      window.alert("Account created successfully!");
+    })
+    .catch((error) => {
+      window.alert(`Error creating account: ${error.message}`);
+    });
+});
+
+const returnBtn = document.getElementById("return-btn");
+returnBtn.addEventListener("click", () => {
+  main.style.display = "block";
+  createAcct.style.display = "none";
+});
+firm-password-signup");
 const createacctbtn = document.getElementById("create-acct-btn");
 
 const returnBtn = document.getElementById("return-btn");
