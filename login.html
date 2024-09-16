@@ -26,5 +26,16 @@
     </div>
   </div>
   <script type = "module" src = "script.js"></script>
+<script>// Example script to toggle forms
+document.getElementById('sign-up').addEventListener('click', function() {
+    document.getElementById('main').classList.remove('active');
+    document.getElementById('create-acct').classList.add('active');
+});
+
+document.getElementById('return-btn').addEventListener('click', function() {
+    document.getElementById('create-acct').classList.remove('active');
+    document.getElementById('main').classList.add('active');
+});
+</script>
 </body>
 </html>
