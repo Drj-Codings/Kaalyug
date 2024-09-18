@@ -3,35 +3,132 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Profile</title>
+  <title>Home - Firebase Authentication</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .card {
+      margin: 15px;
+      padding: 15px;            
+      background-color: #ffffff;
+      color: #212529;
+      border: 1px solid #dee2e6;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    .profile-info {
+      margin-bottom: 20px;
+    }
+    .profile-info img {
+      border-radius: 50%;
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+    }
+    .logout-btn {
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
-  <h1>User Profile</h1>
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Navbar</a>
+    <a href="index.html"><span class="material-symbols-outlined" style="color: #000000f1;">account_circle</span></a>
+  </div>
+</nav>
 
-  <!-- Profile Image -->
-  <img id="profile-pic" src="default-profile-pic.png" alt="Profile Picture" style="width: 150px; height: 150px;"><br>
-  <input type="file" id="profile-pic-upload" style="display: none;"><br>
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-md-6 mx-auto">
+      <div class="card">
+        <h2>Welcome!</h2>
+        <div id="profile-info" class="profile-info">
+          <img id="profile-pic" src="" alt="Profile Picture">
+          <h3 id="profile-name">User Name</h3>
+          <p id="profile-email">user@example.com</p>
+        </div>
+        <button id="logout" class="btn btn-primary logout-btn">Logout</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-  <!-- Profile Information -->
-  <label for="profile-name">Name:</label>
-  <input type="text" id="profile-name" disabled><br>
+<!-- Firebase JavaScript SDKs -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+  import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+  import { getStorage, ref as storageRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js";
 
-  <label for="profile-email">Email:</label>
-  <input type="email" id="profile-email" disabled><br>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAGgjxRmwVBgJ2NOp2akkOad5hVmYjPA8c",
+    authDomain: "frrdrj-a460a.firebaseapp.com",
+    projectId: "frrdrj-a460a",
+    storageBucket: "frrdrj-a460a.appspot.com",
+    messagingSenderId: "352280969666",
+    appId: "1:352280969666:web:af8289699716b8a6b8165b",
+    measurementId: "G-LE0D05SZV2"
+  };
 
-  <label for="profile-phone">Phone Number:</label>
-  <input type="text" id="profile-phone" disabled><br>
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const database = getDatabase(app);
+  const storage = getStorage(app);
 
-  <!-- Buttons -->
-  <button id="edit-profile">Edit Profile</button>
-  <button id="save-profile" style="display: none;">Save Changes</button>
-  <button id="logout">Logout</button>
+  // DOM Elements
+  const profilePic = document.getElementById('profile-pic');
+  const profileName = document.getElementById('profile-name');
+  const profileEmail = document.getElementById('profile-email');
+  const logoutButton = document.getElementById('logout');
 
-  <script src="script.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js"></script>
-  
+  // Check authentication state
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      const uid = user.uid;
+      profileEmail.textContent = user.email;
+
+      // Get user profile data from the Realtime Database
+      get(ref(database, 'users/' + uid)).then((snapshot) => {
+        if (snapshot.exists()) {
+          const userData = snapshot.val();
+          profileName.textContent = userData.name || 'User Name';
+
+          // Get profile picture URL from Firebase Storage
+          if (userData.profilePicture) {
+            getDownloadURL(storageRef(storage, 'profile_pictures/' + uid + '.jpg')).then((url) => {
+              profilePic.src = url;
+            }).catch((error) => {
+              console.error('Error getting profile picture URL:', error);
+            });
+          }
+        } else {
+          console.log('No user data found');
+        }
+      }).catch((error) => {
+        console.error('Error fetching user data:', error);
+      });
+    } else {
+      // Redirect to login page if not authenticated
+      window.location.href = 'login.html';
+    }
+  });
+
+  // Logout functionality
+  logoutButton.addEventListener('click', () => {
+    signOut(auth).then(() => {
+      window.alert('Logged out successfully!');
+      window.location.href = 'login.html';
+    }).catch((error) => {
+      window.alert(`Error logging out: ${error.message}`);
+    });
+  });
+</script>
 </body>
 </html>
