@@ -31,8 +31,11 @@
       height: 100px;
       object-fit: cover;
     }
-    .logout-btn {
+    .logout-btn, .edit-btn {
       margin-top: 20px;
+    }
+    #edit-form {
+      display: none;
     }
   </style>
 </head>
@@ -53,7 +56,15 @@
           <img id="profile-pic" src="" alt="Profile Picture">
           <h3 id="profile-name">User Name</h3>
           <p id="profile-email">user@example.com</p>
+          <p id="profile-phone">Phone Number: <span id="phone-number">N/A</span></p>
         </div>
+        <button id="edit" class="btn btn-warning edit-btn">Edit Profile</button>
+        <form id="edit-form">
+          <input type="file" id="profile-picture-input">
+          <input type="text" id="name-input" placeholder="Enter new name">
+          <input type="text" id="phone-input" placeholder="Enter new phone number">
+          <button type="button" id="save" class="btn btn-success">Save Changes</button>
+        </form>
         <button id="logout" class="btn btn-primary logout-btn">Logout</button>
       </div>
     </div>
@@ -63,9 +74,9 @@
 <!-- Firebase JavaScript SDKs -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-  import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
-  import { getStorage, ref as storageRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js";
+  import { getAuth, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+  import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+  import { getStorage, ref as storageRef, getDownloadURL, uploadBytes } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAGgjxRmwVBgJ2NOp2akkOad5hVmYjPA8c",
@@ -86,7 +97,19 @@
   const profilePic = document.getElementById('profile-pic');
   const profileName = document.getElementById('profile-name');
   const profileEmail = document.getElementById('profile-email');
+  const profilePhone = document.getElementById('phone-number');
+  const editButton = document.getElementById('edit');
+  const editForm = document.getElementById('edit-form');
+  const saveButton = document.getElementById('save');
+  const nameInput = document.getElementById('name-input');
+  const phoneInput = document.getElementById('phone-input');
+  const profilePicInput = document.getElementById('profile-picture-input');
   const logoutButton = document.getElementById('logout');
+
+  // Toggle Edit Form
+  editButton.addEventListener('click', () => {
+    editForm.style.display = editForm.style.display === 'none' ? 'block' : 'none';
+  });
 
   // Check authentication state
   onAuthStateChanged(auth, (user) => {
@@ -99,6 +122,7 @@
         if (snapshot.exists()) {
           const userData = snapshot.val();
           profileName.textContent = userData.name || 'User Name';
+          profilePhone.textContent = userData.phone || 'N/A';
 
           // Get profile picture URL from Firebase Storage
           if (userData.profilePicture) {
@@ -118,6 +142,46 @@
       // Redirect to login page if not authenticated
       window.location.href = 'login.html';
     }
+  });
+
+  // Save Profile Changes
+  saveButton.addEventListener('click', () => {
+    const user = auth.currentUser;
+    const uid = user.uid;
+    const newName = nameInput.value;
+    const newPhone = phoneInput.value;
+    const profilePictureFile = profilePicInput.files[0];
+
+    const updates = {};
+
+    // Update name and phone in Firebase Database
+    if (newName) {
+      updates['users/' + uid + '/name'] = newName;
+    }
+    if (newPhone) {
+      updates['users/' + uid + '/phone'] = newPhone;
+    }
+
+    // Update profile picture in Firebase Storage
+    if (profilePictureFile) {
+      const storageRefPic = storageRef(storage, 'profile_pictures/' + uid + '.jpg');
+      uploadBytes(storageRefPic, profilePictureFile).then(() => {
+        return getDownloadURL(storageRefPic);
+      }).then((url) => {
+        profilePic.src = url;
+        updates['users/' + uid + '/profilePicture'] = url;
+      }).catch((error) => {
+        console.error('Error uploading profile picture:', error);
+      });
+    }
+
+    // Save updates to Firebase
+    update(ref(database), updates).then(() => {
+      window.alert('Profile updated successfully!');
+      editForm.style.display = 'none';
+    }).catch((error) => {
+      window.alert('Error updating profile: ' + error.message);
+    });
   });
 
   // Logout functionality
